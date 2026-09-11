@@ -55,11 +55,6 @@ original, which you can download from
 [images.nasa.gov](https://images.nasa.gov/details/KSC-20260902-PH-KLS01_0179)
 to reproduce it at full size.
 
-The flight suits go cleanly, including the folds and shadows where the blue
-darkens, while the patches and name tags survive. The metal cylinders lose
-their reflections too, because they genuinely are blue-tinted - the model
-works on pixels, not objects.
-
 ## How it works
 
 1. **Quantise** - round each RGB channel down into buckets (default 10), so

@@ -57,7 +57,7 @@ def print_failures(colours, scores, predicted, expected) -> None:
 
     agreement = agreement_scores(scores)
     for sample in clearest_failures(scores, predicted, expected, FAILURES_TO_SHOW):
-        rgb = tuple(colours[sample])
+        rgb = tuple(colours[sample].tolist())
         print(f"  {rgb!s:18} {expected[sample]:8} ({agreement[sample]:.1f}/10) called {predicted[sample]}")
 
 

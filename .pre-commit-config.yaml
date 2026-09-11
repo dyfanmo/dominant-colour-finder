@@ -9,8 +9,12 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      # The data files are third-party artifacts and should stay byte-identical
+      # to their source, so the whitespace fixers leave them alone.
       - id: trailing-whitespace
+        exclude: ^src/dominant_colour/data/
       - id: end-of-file-fixer
+        exclude: ^src/dominant_colour/data/
       - id: check-toml
       - id: check-yaml
       - id: check-added-large-files
