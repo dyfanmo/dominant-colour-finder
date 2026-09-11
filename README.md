@@ -40,15 +40,20 @@ message.
 
 `black_out_colours.py` paints every pixel of a named colour black - a before
 and after shows where the model draws its boundaries better than a percentage
-does. Run on a 45-megapixel NASA original:
+does.
 
 ```bash
-uv run scripts/black_out_colours.py astronauts.jpg blue
+uv run scripts/black_out_colours.py docs/astronauts.jpg blue
 ```
 
 | Before | After `blue` blacked out |
 | --- | --- |
 | ![Astronauts in blue flight suits](docs/astronauts.jpg) | ![The same photo with blue pixels blacked out](docs/astronauts_blue_blacked_out.jpg) |
+
+These are resized copies; the run shown was on the 45-megapixel NASA
+original, which you can download from
+[images.nasa.gov](https://images.nasa.gov/details/KSC-20260902-PH-KLS01_0179)
+to reproduce it at full size.
 
 The flight suits go cleanly, including the folds and shadows where the blue
 darkens, while the patches and name tags survive. The metal cylinders lose
@@ -127,6 +132,6 @@ Obtained via [Flipajs/color_naming_Weijer](https://github.com/Flipajs/color_nami
 
 Available at [cat.uab.cat/Datasets/color_naming](http://www.cat.uab.cat/Datasets/color_naming/).
 
-**Test image** - NASA / Kennedy Space Center, public domain.
+**Test image** - [NASA / Kennedy Space Center](https://images.nasa.gov/details/KSC-20260902-PH-KLS01_0179), public domain.
 
 **Built with** NumPy and Pillow.
