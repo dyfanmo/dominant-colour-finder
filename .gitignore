@@ -14,3 +14,7 @@ build/
 *_edited.png
 test_real.jpg
 KSC-*.jpg
+
+# Except the README's demo images, which are part of the project
+!docs/*.png
+!docs/*.jpg
