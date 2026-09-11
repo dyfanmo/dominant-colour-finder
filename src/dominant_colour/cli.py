@@ -1,6 +1,9 @@
-import argparse
+"""The parts of the command line handling that both scripts need."""
 
-from dominant_colour.constants import COLOUR_NAMES, QUANTISE_BUCKET_SIZE
+import argparse
+import sys
+
+from dominant_colour.constants import COLOUR_NAMES
 
 
 def positive_int(value) -> int:
@@ -16,45 +19,20 @@ def positive_int(value) -> int:
     return number
 
 
-def print_results(results) -> None:
-    """Print the colours found, or say why there aren't any."""
-    if not results:
-        print("No colours left after ignoring the ones you asked to exclude.")
-        return
-
-    if len(results) == 1:
-        (rgb, name) = results[0]
-        print(f"Dominant colour: {name} {rgb}")
-        return
-
-    print(f"Top {len(results)} colours:")
-    for rank, (rgb, name) in enumerate(results, start=1):
-        print(f"  {rank}. {name} {rgb}")
-
-
-def build_parser() -> argparse.ArgumentParser:
-    """Set up the command line arguments the script accepts."""
-    parser = argparse.ArgumentParser(description="Find the dominant colour(s) of an image.")
-    parser.add_argument("image_path", help="Path to the input image file.")
+def add_colours_argument(parser, name, help_text) -> None:
+    """Add an argument that only accepts the names of the eleven colours."""
     parser.add_argument(
-        "--top-n",
-        type=positive_int,
-        default=1,
-        help="How many dominant colours to return (default: 1).",
-    )
-    parser.add_argument(
-        "--bucket-size",
-        type=positive_int,
-        default=QUANTISE_BUCKET_SIZE,
-        help=f"Group similar RGB values into buckets this wide (default: {QUANTISE_BUCKET_SIZE}).",
-    )
-    parser.add_argument(
-        "--ignore",
-        nargs="*",
-        default=[],
+        name,
+        nargs="*" if name.startswith("-") else "+",
+        default=[] if name.startswith("-") else None,
         choices=COLOUR_NAMES,
         metavar="COLOUR",
-        help=f"Colours to exclude. One or more of: {', '.join(COLOUR_NAMES)}",
+        help=f"{help_text} One or more of: {', '.join(COLOUR_NAMES)}",
     )
 
-    return parser
+
+def report_error(exc) -> int:
+    """Print a problem to stderr and hand back the exit code to use."""
+    print(f"Error: {exc}", file=sys.stderr)
+
+    return 1
