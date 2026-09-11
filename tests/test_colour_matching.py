@@ -12,46 +12,81 @@ from dominant_colour.colour_matching import (
     BIN_WIDTH,
     BINS_PER_CHANNEL,
     LOOKUP_TABLE,
-    lookup_indices,
+    LOOKUP_TABLE_PATH,
+    colour_bins,
     rgb_to_colour_names,
 )
 from dominant_colour.constants import LOOKUP_TABLE_COLOUR_COLUMNS
 
 
-def test_lookup_table_has_a_row_for_every_bin() -> None:
-    """The table covers all 32x32x32 bins, one row each."""
-    assert LOOKUP_TABLE.shape == (BINS_PER_CHANNEL**3, len(LOOKUP_TABLE_COLOUR_COLUMNS))
+def test_lookup_table_is_a_bin_per_channel_grid() -> None:
+    """The table covers all 32x32x32 bins, with the 11 names on the last axis."""
+    expected_shape = (BINS_PER_CHANNEL, BINS_PER_CHANNEL, BINS_PER_CHANNEL, len(LOOKUP_TABLE_COLOUR_COLUMNS))
+
+    assert LOOKUP_TABLE.shape == expected_shape
 
 
 def test_lookup_table_rows_are_probabilities() -> None:
-    """Each row is a probability across the 11 names, so it sums to 1."""
-    assert np.allclose(LOOKUP_TABLE.sum(axis=1), 1.0)
+    """Each bin is a probability across the 11 names, so it sums to 1."""
+    assert np.allclose(LOOKUP_TABLE.sum(axis=-1), 1.0)
 
 
-def test_lookup_indices_ends_at_the_last_bin() -> None:
-    """White sits in the last bin, so the arithmetic covers the whole range."""
-    assert lookup_indices([(255, 255, 255)]) == [BINS_PER_CHANNEL**3 - 1]
+def test_lookup_table_axes_are_red_green_blue() -> None:
+    """The grid is indexed [red][green][blue], not the order a default reshape gives.
+
+    Red varies fastest in the file, so the rows one step along each channel have
+    to land on the matching axis - getting this wrong names colours silently
+    wrongly rather than failing.
+    """
+    rows = np.loadtxt(LOOKUP_TABLE_PATH)
+    first_bin, red_step, green_step, blue_step = 0, 1, BINS_PER_CHANNEL, BINS_PER_CHANNEL**2
+
+    for row, bin_index in [
+        (first_bin, (0, 0, 0)),
+        (red_step, (1, 0, 0)),
+        (green_step, (0, 1, 0)),
+        (blue_step, (0, 0, 1)),
+    ]:
+        expected = rows[row, len(bin_index) :]
+        np.testing.assert_array_equal(LOOKUP_TABLE[bin_index], expected)
 
 
-def test_lookup_indices_groups_colours_in_the_same_bin() -> None:
-    """Colours closer together than the bin width share an index."""
-    same_bin = lookup_indices([(0, 0, 0), (BIN_WIDTH - 1, 0, 0)])
+def test_colour_bins_ends_at_the_last_bin() -> None:
+    """White sits in the last bin of every channel, so the range is covered."""
+    last_bin = BINS_PER_CHANNEL - 1
 
-    assert same_bin[0] == same_bin[1]
-
-
-def test_lookup_indices_gives_each_channel_its_own_step() -> None:
-    """Green steps by a row of red bins, blue by a whole layer."""
-    steps = lookup_indices([(BIN_WIDTH, 0, 0), (0, BIN_WIDTH, 0), (0, 0, BIN_WIDTH)])
-
-    assert list(steps) == [1, BINS_PER_CHANNEL, BINS_PER_CHANNEL**2]
+    np.testing.assert_array_equal(colour_bins([(255, 255, 255)]), [[last_bin] * 3])
 
 
-def test_lookup_indices_handles_uint8_pixels() -> None:
+def test_colour_bins_groups_colours_in_the_same_bin() -> None:
+    """Colours closer together than the bin width share a bin."""
+    same_bin = colour_bins([(0, 0, 0), (BIN_WIDTH - 1, 0, 0)])
+
+    np.testing.assert_array_equal(same_bin[0], same_bin[1])
+
+
+def test_colour_bins_steps_each_channel_independently() -> None:
+    """One bin width along a channel moves that channel's bin only."""
+    steps = colour_bins([(BIN_WIDTH, 0, 0), (0, BIN_WIDTH, 0), (0, 0, BIN_WIDTH)])
+
+    np.testing.assert_array_equal(steps, [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+
+def test_colour_bins_handles_uint8_pixels() -> None:
     """Images arrive as uint8, which overflows if it isn't widened first."""
     pixels = np.array([[255, 255, 255]], dtype=np.uint8)
+    last_bin = BINS_PER_CHANNEL - 1
 
-    assert lookup_indices(pixels) == [BINS_PER_CHANNEL**3 - 1]
+    np.testing.assert_array_equal(colour_bins(pixels), [[last_bin] * 3])
+
+
+def test_colour_probabilities_works_on_an_image_shaped_array() -> None:
+    """Naming runs on a whole (H, W, 3) image as well as a flat list of colours."""
+    image = np.zeros((2, 3, 3), dtype=np.uint8)
+
+    probabilities = colour_matching.colour_probabilities(image)
+
+    assert probabilities.shape == (2, 3, len(LOOKUP_TABLE_COLOUR_COLUMNS))
 
 
 def test_rgb_to_colour_names_picks_the_most_likely_column(monkeypatch) -> None:
@@ -59,8 +94,7 @@ def test_rgb_to_colour_names_picks_the_most_likely_column(monkeypatch) -> None:
     fake_table = np.zeros((2, len(LOOKUP_TABLE_COLOUR_COLUMNS)))
     fake_table[0, 4] = 1.0
     fake_table[1, 8] = 1.0
-    monkeypatch.setattr(colour_matching, "LOOKUP_TABLE", fake_table)
-    monkeypatch.setattr(colour_matching, "lookup_indices", lambda _: np.array([0, 1]))
+    monkeypatch.setattr(colour_matching, "colour_probabilities", lambda _: fake_table)
 
     expected = [LOOKUP_TABLE_COLOUR_COLUMNS[4], LOOKUP_TABLE_COLOUR_COLUMNS[8]]
     assert rgb_to_colour_names([(0, 0, 0), (255, 255, 255)]) == expected
