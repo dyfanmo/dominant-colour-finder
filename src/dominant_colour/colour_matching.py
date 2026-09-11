@@ -18,11 +18,7 @@ def colour_names_to_columns(colour_names) -> list[int]:
 
 
 def load_lookup_table() -> NDArray:
-    """Load the trained probabilities as a 32x32x32 grid indexed by [red][green][blue].
-
-    The file is one row per bin with red varying fastest, so it reshapes in
-    Fortran order - NumPy's default would put the axes in blue-green-red order.
-    """
+    """Load the trained probabilities as a 32x32x32 grid indexed by [red][green][blue]."""
     table = np.loadtxt(LOOKUP_TABLE_PATH)
     probabilities = table[:, FIRST_PROBABILITY_COLUMN:]
     grid = probabilities.reshape(BINS_PER_CHANNEL, BINS_PER_CHANNEL, BINS_PER_CHANNEL, -1, order="F")
@@ -41,10 +37,7 @@ def colour_bins(pixels) -> NDArray:
 
 def colour_probabilities(pixels) -> NDArray:
     """How likely each colour is to be called each of the 11 basic colours."""
-    # Indexing the last axis rather than transposing means this works on a
-    # flat list of colours and on a whole image alike.
     bins = colour_bins(pixels)
-
     return LOOKUP_TABLE[bins[..., 0], bins[..., 1], bins[..., 2]]
 
 
