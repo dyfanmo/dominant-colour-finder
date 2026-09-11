@@ -31,8 +31,7 @@ LOOKUP_TABLE = load_lookup_table()
 
 def colour_bins(pixels) -> NDArray:
     """Which bin of the 32x32x32 grid each colour falls in, as (..., 3)."""
-    # Widening to int first matters: uint8 wraps around when the maths runs on it.
-    return np.asarray(pixels, dtype=int) // BIN_WIDTH
+    return np.asarray(pixels) // BIN_WIDTH
 
 
 def colour_probabilities(pixels) -> NDArray:

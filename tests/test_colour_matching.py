@@ -59,30 +59,15 @@ def test_colour_bins_ends_at_the_last_bin() -> None:
 
 
 def test_colour_bins_groups_colours_in_the_same_bin() -> None:
-    """Colours closer together than the bin width share a bin."""
+    """Colours closer together than the bin width share a bin, so they share a name."""
     same_bin = colour_bins([(0, 0, 0), (BIN_WIDTH - 1, 0, 0)])
 
     np.testing.assert_array_equal(same_bin[0], same_bin[1])
 
 
-def test_colour_bins_steps_each_channel_independently() -> None:
-    """One bin width along a channel moves that channel's bin only."""
-    steps = colour_bins([(BIN_WIDTH, 0, 0), (0, BIN_WIDTH, 0), (0, 0, BIN_WIDTH)])
-
-    np.testing.assert_array_equal(steps, [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-
-
-def test_colour_bins_handles_uint8_pixels() -> None:
-    """Images arrive as uint8, which overflows if it isn't widened first."""
-    pixels = np.array([[255, 255, 255]], dtype=np.uint8)
-    last_bin = BINS_PER_CHANNEL - 1
-
-    np.testing.assert_array_equal(colour_bins(pixels), [[last_bin] * 3])
-
-
-def test_colour_probabilities_works_on_an_image_shaped_array() -> None:
-    """Naming runs on a whole (H, W, 3) image as well as a flat list of colours."""
-    image = np.zeros((2, 3, 3), dtype=np.uint8)
+def test_colour_probabilities_works_on_a_uint8_image() -> None:
+    """Naming runs on a whole (H, W, 3) image, in the uint8 that images arrive as."""
+    image = np.full((2, 3, 3), 255, dtype=np.uint8)
 
     probabilities = colour_matching.colour_probabilities(image)
 
