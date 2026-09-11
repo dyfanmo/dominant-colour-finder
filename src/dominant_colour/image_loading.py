@@ -14,7 +14,7 @@ def has_transparency(img) -> bool:
     return img.mode in TRANSPARENT_MODES
 
 
-def transperent_to_white(img) -> Image.Image:
+def transparent_to_white(img) -> Image.Image:
     """Put the image on a white background, so transparent areas read as white."""
     rgba_image = img.convert("RGBA")
     background = Image.new("RGB", rgba_image.size, WHITE)
@@ -32,7 +32,7 @@ def load_image_as_pixels(image_path: str | Path) -> NDArray:
 
     try:
         with Image.open(path) as img:
-            rgb_image = transperent_to_white(img) if has_transparency(img) else img.convert("RGB")
+            rgb_image = transparent_to_white(img) if has_transparency(img) else img.convert("RGB")
 
             return np.array(rgb_image, dtype=np.uint8)
     except DecompressionBombError as exc:

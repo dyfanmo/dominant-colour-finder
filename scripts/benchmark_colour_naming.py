@@ -1,23 +1,4 @@
-#!/usr/bin/env python3
-"""Measure the colour naming against human judgements.
-
-Uses the fuzzy colour naming data set from the CVC colour group: 387
-colour samples, each scored by 10 subjects who spread 10 points across
-the eleven basic colour names. The highest scoring name is what people
-called that colour.
-
-    Benavente, Vanrell & Baldrich. A Data Set for Fuzzy Colour Naming.
-    Color Research and Application, 31(1): 48-56, 2006.
-    http://www.cat.uab.cat/Datasets/color_naming/
-
-Because the scores are graded rather than a single label, we can tell
-apart the samples people agreed on from the ones they didn't, and only
-the first kind are a fair test.
-
-Usage:
-    uv run scripts/benchmark_colour_naming.py
-"""
-
+import argparse
 from collections import Counter
 from pathlib import Path
 
@@ -25,23 +6,23 @@ import numpy as np
 
 from dominant_colour.colour_matching import rgb_to_colour_names
 
-BENCHMARK_DATA_PATH = (
-    Path(__file__).parent.parent / "src" / "dominant_colour" / "data" / "benchmark_data.txt"
-)
+BENCHMARK_DATA_PATH = Path(__file__).parent.parent / "src" / "dominant_colour" / "data" / "benchmark_data.txt"
 
-# The order the membership columns appear in, which is not the same order
-# our own lookup table uses.
 BENCHMARK_COLOUR_NAMES = [
-    "red", "orange", "brown", "yellow", "green", "blue",
-    "purple", "pink", "white", "grey", "black",
+    "red",
+    "orange",
+    "brown",
+    "yellow",
+    "green",
+    "blue",
+    "purple",
+    "pink",
+    "white",
+    "grey",
+    "black",
 ]
 
-# Out of the 10 points each subject had to give away. A sample where the
-# winning name scored this or more is one people broadly agreed on.
 CONFIDENT_SCORE = 7.0
-
-# A name that scored at least this much was chosen by a fair few people,
-# so answering with it isn't unreasonable even if it didn't win.
 DEFENSIBLE_SCORE = 2.0
 
 
@@ -74,10 +55,7 @@ def print_headline(predicted, expected, scores) -> None:
     confident_matches = [m for m, c in zip(matches, confident) if c]
     ambiguous_matches = [m for m, c in zip(matches, confident) if not c]
 
-    defensible = [
-        score_for(scores, sample, name) >= DEFENSIBLE_SCORE
-        for sample, name in enumerate(predicted)
-    ]
+    defensible = [score_for(scores, sample, name) >= DEFENSIBLE_SCORE for sample, name in enumerate(predicted)]
 
     print(f"samples: {len(predicted)}\n")
     print(f"  matches the name people chose      {share(matches)}")
@@ -98,9 +76,7 @@ def print_per_colour(predicted, expected) -> None:
 
 def print_confusions(predicted, expected) -> None:
     """The mistakes it makes most, which say more than the headline number."""
-    mistakes = Counter(
-        (e, p) for p, e in zip(predicted, expected) if p != e
-    )
+    mistakes = Counter((e, p) for p, e in zip(predicted, expected) if p != e)
 
     print("\nmost common mistakes:")
     for (expected_name, predicted_name), count in mistakes.most_common(8):
@@ -130,9 +106,27 @@ def share(matches) -> str:
     return f"{sum(matches):3}/{len(matches):3} ({100 * sum(matches) / len(matches):5.1f}%)"
 
 
+def quantise(colours, bucket_size) -> np.ndarray:
+    """Round each channel down to its bucket, as the analysis pipeline does."""
+    return (colours // bucket_size) * bucket_size
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Measure colour naming against human judgements.")
+    parser.add_argument(
+        "--bucket-size",
+        type=int,
+        help="Quantise the samples before naming them, to see what that costs.",
+    )
+    args = parser.parse_args()
+
     colours, scores = load_benchmark()
     expected = consensus_names(scores)
+
+    if args.bucket_size:
+        print(f"quantising at bucket size {args.bucket_size} before naming\n")
+        colours = quantise(colours, args.bucket_size)
+
     predicted = rgb_to_colour_names(colours)
 
     print_headline(predicted, expected, scores)

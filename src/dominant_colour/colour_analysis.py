@@ -9,7 +9,6 @@ MAX_COLOURS = 256**3
 
 
 class DominantColourFinder:
-
     def __init__(self, pixels):
         self.pixels = pixels
         self.colours = None
@@ -40,9 +39,9 @@ class DominantColourFinder:
     def rank_top_colours(self, top_n) -> list[RGBColour]:
         """Return the top_n colours ordered from most to least frequent."""
         descending_order = np.argsort(self.counts)[::-1]
-        top_indices = descending_order[:top_n]
+        top_colours = self.colours[descending_order[:top_n]].tolist()
 
-        return [tuple(int(channel) for channel in self.colours[index]) for index in top_indices]
+        return [(red, green, blue) for red, green, blue in top_colours]
 
     def rank_top_colours_with_names(self, top_n) -> list[tuple[RGBColour, str]]:
         """Return the top_n colours as (RGB, colour_name) pairs, most frequent first."""
@@ -51,14 +50,10 @@ class DominantColourFinder:
 
         return list(zip(top_colours, names))
 
-    def find(
-        self, top_n=1, bucket_size=QUANTISE_BUCKET_SIZE, colours_to_ignore=None
-    ) -> list[tuple[RGBColour, str]]:
+    def find(self, top_n=1, bucket_size=QUANTISE_BUCKET_SIZE, colours_to_ignore=None) -> list[tuple[RGBColour, str]]:
         """Run the whole pipeline and return the top_n colours as (RGB, name) pairs."""
 
         self.quantise_colours(bucket_size)
         self.count_unique_colours()
         self.remove_ignored_colour_names(colours_to_ignore or [])
         return self.rank_top_colours_with_names(top_n)
-
-

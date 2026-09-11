@@ -9,13 +9,11 @@ from PIL import Image
 from dominant_colour.image_loading import (
     has_transparency,
     load_image_as_pixels,
-    transperent_to_white,
+    transparent_to_white,
 )
 
 
-@pytest.mark.parametrize(
-    "mode, expected", [("RGBA", True), ("LA", True), ("RGB", False), ("L", False)]
-)
+@pytest.mark.parametrize("mode, expected", [("RGBA", True), ("LA", True), ("RGB", False), ("L", False)])
 def test_has_transparency(mode, expected) -> None:
     """Only modes with an alpha channel count as transparent."""
     assert has_transparency(Image.new("RGB", (2, 2)).convert(mode)) is expected
@@ -25,7 +23,7 @@ def test_transparent_to_white() -> None:
     """Transparent areas come out white, and the mode is RGB."""
     image = Image.new("RGBA", (2, 2), (255, 0, 0, 0))
 
-    result = transperent_to_white(image)
+    result = transparent_to_white(image)
 
     assert result.mode == "RGB"
     assert result.getpixel((0, 0)) == (255, 255, 255)
@@ -61,9 +59,7 @@ def test_load_image_as_pixels_lossy_formats(tmp_path: Path, extension) -> None:
     "mode, extension",
     [("L", "png"), ("P", "png"), ("1", "png"), ("RGBA", "png"), ("CMYK", "jpg")],
 )
-def test_load_image_as_pixels_converts_every_mode_to_three_channels(
-    tmp_path: Path, mode, extension
-) -> None:
+def test_load_image_as_pixels_converts_every_mode_to_three_channels(tmp_path: Path, mode, extension) -> None:
     """Whatever mode the file is in, we always get three channels back."""
     # CMYK is the odd one out - PNG can't store it, so it has to be a JPEG.
     image_path = tmp_path / f"{mode}.{extension}"

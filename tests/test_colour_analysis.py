@@ -1,19 +1,17 @@
-import io
-
 import numpy as np
-import pytest
-from PIL import Image
 
 from dominant_colour import colour_analysis
 from dominant_colour.colour_analysis import DominantColourFinder
+from dominant_colour.constants import QUANTISE_BUCKET_SIZE
 
 
-def quantise(pixels, bucket_size=10) -> np.ndarray:
+def quantise(pixels, bucket_size=QUANTISE_BUCKET_SIZE) -> np.ndarray:
     """Quantise an array of pixels and hand back the result."""
     finder = DominantColourFinder(pixels)
     finder.quantise_colours(bucket_size)
 
     return finder.quantised_pixels
+
 
 def counted(colours, counts) -> DominantColourFinder:
     """A finder with its counted colours set directly, skipping quantise and count."""
@@ -54,10 +52,10 @@ def test_quantise_colours_shape() -> None:
 
 def test_count_unique_colours() -> None:
     """Pixels sharing a bucket become one colour, counted once per pixel."""
-    pixels = np.array([[[0,0,0], [0,0,0], [250,250,250], [253,252,251], [255,255,255]]], dtype=np.uint8)
+    pixels = np.array([[[0, 0, 0], [0, 0, 0], [250, 250, 250], [253, 252, 251], [255, 255, 255]]], dtype=np.uint8)
 
     finder = DominantColourFinder(pixels)
-    finder.quantise_colours(bucket_size=10)
+    finder.quantise_colours(bucket_size=QUANTISE_BUCKET_SIZE)
     finder.count_unique_colours()
 
     counted = dict(zip(map(tuple, finder.colours), finder.counts))
@@ -79,9 +77,7 @@ def test_remove_ignored_colour_names(monkeypatch) -> None:
 
 def test_remove_ignored_colour_names_multiple_colours(monkeypatch) -> None:
     """Every name in the list is dropped, not just the first."""
-    monkeypatch.setattr(
-        colour_analysis, "rgb_to_colour_names", lambda _: ["black", "white", "yellow"]
-    )
+    monkeypatch.setattr(colour_analysis, "rgb_to_colour_names", lambda _: ["black", "white", "yellow"])
 
     black, white, yellow = (0, 0, 0), (250, 250, 250), (250, 250, 0)
     finder = counted([black, white, yellow], [2, 3, 1])
@@ -158,90 +154,3 @@ def test_find_runs_the_whole_pipeline(monkeypatch) -> None:
     pixels = np.array([[[0, 0, 0], [0, 0, 0], [250, 250, 250]]], dtype=np.uint8)
 
     assert DominantColourFinder(pixels).find() == [((0, 0, 0), "black")]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""def make_noisy_low_quality_image(base_colour, size) -> np.ndarray:
-   
-    rng = np.random.default_rng(seed=42)
-    width, height = size
-
-    base = np.tile(np.array(base_colour, dtype=np.int16), (height, width, 1))
-    noise = rng.integers(-15, 15, size=(height, width, 3))
-    noisy = np.clip(base + noise, 0, 255).astype(np.uint8)
-
-    buffer = io.BytesIO()
-    Image.fromarray(noisy, mode="RGB").save(buffer, format="JPEG", quality=10)
-    buffer.seek(0)
-
-    return np.array(Image.open(buffer).convert("RGB"), dtype=np.uint8)
-
-
-def test_dominant_colour_survives_noise_and_jpeg_compression() -> None:
-    pixels = make_noisy_low_quality_image((255, 255, 0), size=(40, 40))
-
-    results = DominantColourFinder(pixels).find(bucket_size=20)
-    assert results[0][1] == "yellow"
-
-
-def test_ignore_by_name_on_noisy_image_falls_back_to_next_colour() -> None:
-    purple_half = make_noisy_low_quality_image((160, 32, 240), size=(20, 40))
-    yellow_half = make_noisy_low_quality_image((255, 255, 0), size=(20, 40))
-    pixels = np.vstack([purple_half, yellow_half])
-
-    results = DominantColourFinder(pixels).find(bucket_size=20, colours_to_ignore=["purple"])
-    assert results[0][1] == "yellow"
-
-
-def test_top_n_returns_several_colours_most_frequent_first() -> None:
-    pixels = np.array([[0, 0, 0]] * 5 + [[255, 255, 255]] * 3 + [[255, 0, 0]] * 1)
-
-    results = DominantColourFinder(pixels).find(top_n=3)
-    assert [name for _rgb, name in results] == ["black", "white", "red"]
-
-
-def test_an_image_of_one_colour_returns_that_colour() -> None:
-    pixels = np.array([[255, 255, 0]] * 20)
-
-    results = DominantColourFinder(pixels).find()
-    assert [name for _rgb, name in results] == ["yellow"]
-
-
-def test_asking_for_more_colours_than_the_image_has() -> None:
-    pixels = np.array([[0, 0, 0]] * 5 + [[255, 255, 255]] * 3)
-
-    assert len(DominantColourFinder(pixels).find(top_n=10)) == 2
-
-
-def test_ignoring_every_colour_leaves_nothing() -> None:
-    pixels = np.array([[0, 0, 0]] * 10)
-
-    assert DominantColourFinder(pixels).find(colours_to_ignore=["black"]) == []
-
-
-def test_rgb_values_stay_within_range() -> None:
-    # Quantising must never push a channel above 255 - rounding to the
-    # nearest multiple of 10 would turn 255 into 260.
-    pixels = np.array([[255, 255, 255]] * 5 + [[254, 251, 255]] * 5)
-
-    for rgb, _name in DominantColourFinder(pixels).find(top_n=5):
-        assert all(0 <= channel <= 255 for channel in rgb)
-"""
