@@ -105,5 +105,6 @@ def clearest_failures(scores, predicted, expected, failures_to_show) -> NDArray:
     """Samples people were sure about that we got wrong, least ambiguous first."""
     wrong_but_certain = (predicted != expected) & agreed_samples(scores)
     samples = np.flatnonzero(wrong_but_certain)
+    most_certain_first = np.argsort(agreement_scores(scores)[samples])[::-1]
 
-    return samples[np.argsort(-agreement_scores(scores)[samples])][:failures_to_show]
+    return samples[most_certain_first][:failures_to_show]
