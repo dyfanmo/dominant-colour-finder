@@ -1,5 +1,3 @@
-"""Unit tests for image_loading.py."""
-
 from pathlib import Path
 
 import numpy as np

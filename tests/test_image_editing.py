@@ -1,9 +1,3 @@
-"""Unit tests for image_editing.py.
-
-The colour naming is stubbed at the module boundary, as in the analysis
-tests, so a lookup table problem shows up in the matching tests instead.
-"""
-
 from pathlib import Path
 
 import numpy as np

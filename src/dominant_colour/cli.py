@@ -1,5 +1,3 @@
-"""The parts of the command line handling that the scripts share."""
-
 import argparse
 import sys
 import time

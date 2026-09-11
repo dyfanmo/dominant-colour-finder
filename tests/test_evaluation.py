@@ -1,10 +1,3 @@
-"""Unit tests for evaluation.py.
-
-These use tiny hand-written score rows rather than the real benchmark file,
-so each function's behaviour is visible in the test itself. One test checks
-the real file loads with the shape everything else assumes.
-"""
-
 import numpy as np
 
 from dominant_colour import evaluation

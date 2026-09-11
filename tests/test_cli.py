@@ -1,5 +1,3 @@
-"""Unit tests for cli.py."""
-
 import argparse
 
 import pytest

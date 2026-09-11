@@ -1,10 +1,3 @@
-"""Unit tests for colour_matching.py.
-
-These test that the lookup works, not that the names it returns are the
-ones a person would pick - how accurate the model is gets measured
-separately.
-"""
-
 import numpy as np
 
 from dominant_colour import colour_matching

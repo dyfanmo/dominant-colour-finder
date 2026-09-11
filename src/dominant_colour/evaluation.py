@@ -10,7 +10,6 @@ from dominant_colour.colour_matching import rgb_to_colour_names
 
 BENCHMARK_DATA_PATH = Path(__file__).parent / "data" / "benchmark_data.txt"
 
-# The order the score columns appear in, which is not the order our own
 BENCHMARK_COLOURS = np.array(
     ["red", "orange", "brown", "yellow", "green", "blue", "purple", "pink", "white", "grey", "black"]
 )
@@ -18,11 +17,7 @@ BENCHMARK_COLOURS = np.array(
 COLUMN_BY_COLOUR = {colour: column for column, colour in enumerate(BENCHMARK_COLOURS)}
 
 # Out of the 10 points each subject had to give away. A sample whose winning
-# colour scored this or more is one people broadly agreed on.
 CONFIDENT_SCORE = 7.0
-
-# A colour that scored at least this much was chosen by a fair few people, so
-# answering with it isn't unreasonable even if it didn't win.
 DEFENSIBLE_SCORE = 2.0
 
 
