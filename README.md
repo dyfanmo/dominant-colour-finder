@@ -36,6 +36,25 @@ Reads any format Pillow can open, in any mode. Transparency is flattened onto
 white; images past Pillow's ~89 megapixel limit are refused with a clear
 message.
 
+## Seeing the naming work
+
+`black_out_colours.py` paints every pixel of a named colour black - a before
+and after shows where the model draws its boundaries better than a percentage
+does. Run on a 45-megapixel NASA original:
+
+```bash
+uv run scripts/black_out_colours.py astronauts.jpg blue
+```
+
+| Before | After `blue` blacked out |
+| --- | --- |
+| ![Astronauts in blue flight suits](docs/astronauts.jpg) | ![The same photo with blue pixels blacked out](docs/astronauts_blue_blacked_out.jpg) |
+
+The flight suits go cleanly, including the folds and shadows where the blue
+darkens, while the patches and name tags survive. The metal cylinders lose
+their reflections too, because they genuinely are blue-tinted - the model
+works on pixels, not objects.
+
 ## How it works
 
 1. **Quantise** - round each RGB channel down into buckets (default 10), so
