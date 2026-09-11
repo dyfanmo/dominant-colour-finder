@@ -29,8 +29,6 @@ LOOKUP_TABLE = load_lookup_table()
 
 def lookup_indices(pixels) -> NDArray:
     """Find each colour's bin in the 32x32x32 grid the table is built on."""
-    # Indexing the last axis rather than transposing means this works on a
-    # flat list of colours and on a whole image alike.
     pixels = np.asarray(pixels, dtype=int)
     red, green, blue = pixels[..., 0], pixels[..., 1], pixels[..., 2]
 
