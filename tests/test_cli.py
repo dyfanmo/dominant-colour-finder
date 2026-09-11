@@ -4,7 +4,7 @@ import argparse
 
 import pytest
 
-from dominant_colour.cli import add_colours_argument, positive_int, report_error
+from dominant_colour.cli import add_colours_argument, add_verbose_argument, measured, positive_int, report_error
 
 
 def test_positive_int_parses_a_number() -> None:
@@ -62,3 +62,41 @@ def test_report_error_prints_to_stderr_and_returns_one(capsys) -> None:
 
     assert exit_code == 1
     assert "no such file: photo.jpg" in capsys.readouterr().err
+
+
+def test_verbose_argument_defaults_to_off() -> None:
+    """Leaving the flag off means no timing output, which is the common case."""
+    parser = argparse.ArgumentParser()
+    add_verbose_argument(parser)
+
+    assert parser.parse_args([]).verbose is False
+
+
+def test_verbose_argument_turns_on_with_the_flag() -> None:
+    """Passing --verbose flips the flag, with no value needed after it."""
+    parser = argparse.ArgumentParser()
+    add_verbose_argument(parser)
+
+    assert parser.parse_args(["--verbose"]).verbose is True
+
+
+def test_measured_stays_silent_when_not_verbose(capsys) -> None:
+    """Without verbose the block still runs, but nothing is printed."""
+    ran = False
+
+    with measured("load", verbose=False):
+        ran = True
+
+    assert ran
+    assert capsys.readouterr().out == ""
+
+
+def test_measured_reports_time_and_memory_when_verbose(capsys) -> None:
+    """With verbose the label comes back with a time and a peak memory figure."""
+    with measured("load", verbose=True):
+        pass
+
+    report = capsys.readouterr().out
+    assert "load" in report
+    assert "ms" in report
+    assert "MB peak" in report

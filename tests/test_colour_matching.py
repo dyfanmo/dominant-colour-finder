@@ -15,12 +15,12 @@ from dominant_colour.colour_matching import (
     lookup_indices,
     rgb_to_colour_names,
 )
-from dominant_colour.constants import LOOKUP_TABLE_RGB_COLUMNS
+from dominant_colour.constants import LOOKUP_TABLE_COLOUR_COLUMNS
 
 
 def test_lookup_table_has_a_row_for_every_bin() -> None:
     """The table covers all 32x32x32 bins, one row each."""
-    assert LOOKUP_TABLE.shape == (BINS_PER_CHANNEL**3, len(LOOKUP_TABLE_RGB_COLUMNS))
+    assert LOOKUP_TABLE.shape == (BINS_PER_CHANNEL**3, len(LOOKUP_TABLE_COLOUR_COLUMNS))
 
 
 def test_lookup_table_rows_are_probabilities() -> None:
@@ -56,11 +56,11 @@ def test_lookup_indices_handles_uint8_pixels() -> None:
 
 def test_rgb_to_colour_names_picks_the_most_likely_column(monkeypatch) -> None:
     """The name returned is whichever column has the highest probability."""
-    fake_table = np.zeros((2, len(LOOKUP_TABLE_RGB_COLUMNS)))
+    fake_table = np.zeros((2, len(LOOKUP_TABLE_COLOUR_COLUMNS)))
     fake_table[0, 4] = 1.0
     fake_table[1, 8] = 1.0
     monkeypatch.setattr(colour_matching, "LOOKUP_TABLE", fake_table)
     monkeypatch.setattr(colour_matching, "lookup_indices", lambda _: np.array([0, 1]))
 
-    expected = [LOOKUP_TABLE_RGB_COLUMNS[4], LOOKUP_TABLE_RGB_COLUMNS[8]]
+    expected = [LOOKUP_TABLE_COLOUR_COLUMNS[4], LOOKUP_TABLE_COLOUR_COLUMNS[8]]
     assert rgb_to_colour_names([(0, 0, 0), (255, 255, 255)]) == expected

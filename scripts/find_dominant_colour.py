@@ -1,16 +1,13 @@
-#!/usr/bin/env python3
-"""Find the dominant colour(s) of an image.
-
-Usage:
-    uv run scripts/find_dominant_colour.py path/to/image.jpg
-    uv run scripts/find_dominant_colour.py path/to/image.jpg --top-n 3
-    uv run scripts/find_dominant_colour.py path/to/image.jpg --ignore white black
-"""
-
 import argparse
 import sys
 
-from dominant_colour.cli import add_colours_argument, positive_int, report_error
+from dominant_colour.cli import (
+    add_colours_argument,
+    add_verbose_argument,
+    measured,
+    positive_int,
+    report_error,
+)
 from dominant_colour.colour_analysis import DominantColourFinder
 from dominant_colour.constants import QUANTISE_BUCKET_SIZE
 from dominant_colour.image_loading import load_image_as_pixels
@@ -33,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Group similar RGB values into buckets this wide (default: {QUANTISE_BUCKET_SIZE}).",
     )
     add_colours_argument(parser, "--ignore", "Colours to exclude.")
+    add_verbose_argument(parser)
 
     return parser
 
@@ -58,14 +56,17 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
 
     try:
-        pixels = load_image_as_pixels(args.image_path)
+        with measured("load", args.verbose):
+            pixels = load_image_as_pixels(args.image_path)
+    except (FileNotFoundError, ValueError) as exc:
+        return report_error(exc)
+
+    with measured("find", args.verbose):
         results = DominantColourFinder(pixels).find(
             top_n=args.top_n,
             bucket_size=args.bucket_size,
             colours_to_ignore=args.ignore,
         )
-    except (FileNotFoundError, ValueError) as exc:
-        return report_error(exc)
 
     print_results(results)
 
